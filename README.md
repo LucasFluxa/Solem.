@@ -58,6 +58,12 @@ Solem se encuentra actualmente en **fase beta** y en desarrollo activo. Algunas 
 
 ---
 
+## Reconocimientos y Fuentes
+
+* Datos académicos y estructura base de horarios y asignaturas basados en el proyecto comunitario de código abierto [horario-usm](https://github.com/braianvallejos/horario-usm).
+
+---
+
 ## Descargo de Responsabilidad
 
 Solem es un proyecto independiente y de código abierto desarrollado por y para estudiantes. Esta aplicación **no es oficial** y **no tiene afiliación, patrocinio ni relación formal** con la Universidad Técnica Federico Santa María (USM). Todas las marcas registradas, nombres de asignaturas, códigos de ramos y datos institucionales pertenecen a sus respectivos titulares y se emplean exclusivamente con fines organizativos y de consulta estudiantil.

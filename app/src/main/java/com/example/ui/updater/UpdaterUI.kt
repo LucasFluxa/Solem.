@@ -20,6 +20,23 @@ import org.json.JSONObject
 import java.net.URL
 import com.example.ui.theme.*
 
+private fun isNewerVersion(remote: String, current: String): Boolean {
+    return try {
+        val remoteParts = remote.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+        val currentParts = current.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+        val length = maxOf(remoteParts.size, currentParts.size)
+        for (i in 0 until length) {
+            val r = remoteParts.getOrElse(i) { 0 }
+            val c = currentParts.getOrElse(i) { 0 }
+            if (r > c) return true
+            if (r < c) return false
+        }
+        false
+    } catch (e: Exception) {
+        false
+    }
+}
+
 @Composable
 fun UpdateChecker(currentVersion: String) {
     var newVersionData by remember { mutableStateOf<JSONObject?>(null) }
@@ -29,14 +46,13 @@ fun UpdateChecker(currentVersion: String) {
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // Endpoint fijo en github donde pondrás el version.json
                 val url = "https://raw.githubusercontent.com/LucasFluxa/Solem./main/version.json"
                 val jsonString = URL(url).readText()
                 val json = JSONObject(jsonString)
-                val remoteVersion = json.getString("version")
+                val remoteVersion = json.optString("version", "")
                 
-                // Comparación ultra básica
-                if (remoteVersion != currentVersion) {
+                // Solo mostrar si la versión remota es genuinamente mayor a la actual
+                if (isNewerVersion(remoteVersion, currentVersion)) {
                     newVersionData = json
                     showUpdateDialog = true
                 }
@@ -47,12 +63,12 @@ fun UpdateChecker(currentVersion: String) {
     }
 
     if (showUpdateDialog && newVersionData != null) {
-        val version = newVersionData!!.getString("version")
+        val version = newVersionData!!.optString("version", "")
         val changelogArray = newVersionData!!.optJSONArray("changelog")
-        val downloadUrl = newVersionData!!.optString("downloadUrl", "https://github.com/LucasFluxa/Solem./releases/latest")
+        val downloadUrl = newVersionData!!.optString("downloadUrl", "https://github.com/LucasFluxa/Solem./releases")
         
         val changelog = buildString {
-            if (changelogArray != null) {
+            if (changelogArray != null && changelogArray.length() > 0) {
                 for (i in 0 until changelogArray.length()) {
                     append("• ").append(changelogArray.getString(i)).append("\n")
                 }

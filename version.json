@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.0",
   "changelog": [
-    "Avisador automático de nuevas versiones.",
-    "Borrador de ramos duplicado en el horario corregido.",
-    "Actualizada sección 'Acerca de Solem'."
+    "Lanzamiento oficial de Solem v1.0.0 para estudiantes USM.",
+    "Horarios personalizados y catálogo de asignaturas offline.",
+    "Malla curricular interactiva con prerequisitos."
   ],
-  "downloadUrl": "https://github.com/LucasFluxa/Solem./releases/latest/download/app-debug.apk"
+  "downloadUrl": "https://github.com/LucasFluxa/Solem./releases"
 }

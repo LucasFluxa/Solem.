@@ -29,6 +29,8 @@ data class UserPreferences(
     val selectedPeriodo: String = "2026-2",
     val misRamosInscritos: Set<String> = emptySet(), // Siglas inscritas en mi horario
     val misParalelosInscritos: Set<String> = emptySet(), // Formato "SIGLA:PARALELO:CAMPUS:PERIODO"
+    val clasesIntercaladas: Set<String> = emptySet(), // Formato "SIGLA1:PAR1:SIGLA2:PAR2:FIRST_SIGLA"
+    val topesIgnorados: Set<String> = emptySet(), // Formato "SIGLA1:SIGLA2"
     val ramosAprobados: Set<String> = emptySet(), // Siglas de ramos aprobados en la malla
     val ramosCursando: Set<String> = emptySet(), // Siglas de ramos que está cursando
     val notificacionesClaseActivas: Boolean = true,
@@ -48,6 +50,8 @@ class UserPreferencesRepository(private val context: Context) {
         val KEY_SELECTED_PERIODO = stringPreferencesKey("selected_periodo")
         val KEY_MIS_RAMOS_INSCRITOS = stringSetPreferencesKey("mis_ramos_inscritos")
         val KEY_MIS_PARALELOS_INSCRITOS = stringSetPreferencesKey("mis_paralelos_inscritos")
+        val KEY_CLASES_INTERCALADAS = stringSetPreferencesKey("clases_intercaladas")
+        val KEY_TOPES_IGNORADOS = stringSetPreferencesKey("topes_ignorados")
         val KEY_RAMOS_APROBADOS = stringSetPreferencesKey("ramos_aprobados")
         val KEY_RAMOS_CURSANDO = stringSetPreferencesKey("ramos_cursando")
         val KEY_NOTIFICACIONES_ACTIVAS = booleanPreferencesKey("notificaciones_clase_activas")
@@ -79,6 +83,8 @@ class UserPreferencesRepository(private val context: Context) {
                 selectedPeriodo = preferences[KEY_SELECTED_PERIODO] ?: "2026-2",
                 misRamosInscritos = preferences[KEY_MIS_RAMOS_INSCRITOS] ?: emptySet(),
                 misParalelosInscritos = preferences[KEY_MIS_PARALELOS_INSCRITOS] ?: emptySet(),
+                clasesIntercaladas = preferences[KEY_CLASES_INTERCALADAS] ?: emptySet(),
+                topesIgnorados = preferences[KEY_TOPES_IGNORADOS] ?: emptySet(),
                 ramosAprobados = preferences[KEY_RAMOS_APROBADOS] ?: emptySet(),
                 ramosCursando = preferences[KEY_RAMOS_CURSANDO] ?: emptySet(),
                 notificacionesClaseActivas = preferences[KEY_NOTIFICACIONES_ACTIVAS] ?: true,
@@ -247,6 +253,52 @@ class UserPreferencesRepository(private val context: Context) {
                 aprobados.remove(sigla)
             }
             preferences[KEY_RAMOS_APROBADOS] = aprobados
+        }
+    }
+
+    suspend fun setClasesIntercaladas(
+        sigla1: String,
+        par1: String,
+        sigla2: String,
+        par2: String,
+        firstSigla: String
+    ) {
+        val s1 = sigla1.trim().uppercase()
+        val s2 = sigla2.trim().uppercase()
+        val p1 = par1.trim().replace("P", "")
+        val p2 = par2.trim().replace("P", "")
+        val first = firstSigla.trim().uppercase()
+        val entry = "${s1}:${p1}:${s2}:${p2}:${first}"
+
+        context.userDataStore.edit { preferences ->
+            val current = preferences[KEY_CLASES_INTERCALADAS]?.toMutableSet() ?: mutableSetOf()
+            // Eliminar entradas previas de este par
+            current.removeAll {
+                (it.startsWith("${s1}:${p1}:${s2}:${p2}") || it.startsWith("${s2}:${p2}:${s1}:${p1}"))
+            }
+            current.add(entry)
+            preferences[KEY_CLASES_INTERCALADAS] = current
+        }
+    }
+
+    suspend fun removeClasesIntercaladas(sigla: String) {
+        val cleanSigla = sigla.trim().uppercase()
+        context.userDataStore.edit { preferences ->
+            val current = preferences[KEY_CLASES_INTERCALADAS]?.toMutableSet() ?: mutableSetOf()
+            current.removeAll { it.contains(cleanSigla) }
+            preferences[KEY_CLASES_INTERCALADAS] = current
+        }
+    }
+
+    suspend fun ignoreTope(sigla1: String, sigla2: String) {
+        val s1 = sigla1.trim().uppercase()
+        val s2 = sigla2.trim().uppercase()
+        val entry = if (s1 <= s2) "${s1}:${s2}" else "${s2}:${s1}"
+
+        context.userDataStore.edit { preferences ->
+            val current = preferences[KEY_TOPES_IGNORADOS]?.toMutableSet() ?: mutableSetOf()
+            current.add(entry)
+            preferences[KEY_TOPES_IGNORADOS] = current
         }
     }
 

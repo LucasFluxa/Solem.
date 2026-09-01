@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -362,7 +363,7 @@ fun MallaScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(380.dp),
+                        .heightIn(max = 380.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(filteredCarreras, key = { it.id }) { car ->
@@ -731,7 +732,7 @@ fun MallaRamoCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(cardHeight)
+            .heightIn(min = 106.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(bgColor)
             .border(borderWidth, borderColor, RoundedCornerShape(12.dp))

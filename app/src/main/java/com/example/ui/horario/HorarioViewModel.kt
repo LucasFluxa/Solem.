@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -32,7 +33,8 @@ data class EnrolledClassBlock(
     val profesor: String?,
     val campus: String?,
     val tipo: String?,
-    val periodo: String = "2026-2"
+    val periodo: String = "2026-2",
+    val semanaIntercalada: String? = null // "A" (Semana 1 / Impar) o "B" (Semana 2 / Par)
 )
 
 data class HorarioTope(
@@ -120,6 +122,7 @@ class HorarioViewModel(
     val miHorarioBloques: StateFlow<List<EnrolledClassBlock>> = userPreferences.flatMapLatest { prefs ->
         val enrolledParalelos = prefs.misParalelosInscritos // "SIGLA:PARALELO:CAMPUS:PERIODO"
         val enrolledRamos = prefs.misRamosInscritos // Set<String>
+        val intercaladas = prefs.clasesIntercaladas
 
         val enrolledSiglas = (enrolledParalelos.mapNotNull { it.split(":").firstOrNull()?.trim() } + enrolledRamos)
             .filter { it.isNotBlank() }
@@ -165,6 +168,30 @@ class HorarioViewModel(
                         siglaMatch && paraleloMatch && campusMatch && periodoMatch
                     }
                 }.map { b: BloqueHorarioEntity ->
+                    // Determinar si es una clase intercalada (Semana A o B)
+                    var semTag: String? = null
+                    val bSigla = b.sigla.trim().uppercase()
+                    val bPar = b.paralelo.trim().replace("P", "")
+
+                    for (entry in intercaladas) {
+                        val parts = entry.split(":")
+                        if (parts.size >= 5) {
+                            val s1 = parts[0]
+                            val p1 = parts[1]
+                            val s2 = parts[2]
+                            val p2 = parts[3]
+                            val first = parts[4]
+
+                            if (bSigla == s1 && (p1.isBlank() || bPar == p1)) {
+                                semTag = if (first == s1) "A" else "B"
+                                break
+                            } else if (bSigla == s2 && (p2.isBlank() || bPar == p2)) {
+                                semTag = if (first == s2) "A" else "B"
+                                break
+                            }
+                        }
+                    }
+
                     EnrolledClassBlock(
                         sigla = b.sigla,
                         asignaturaNombre = asignaturasMap[b.sigla]?.nombre ?: b.sigla,
@@ -175,7 +202,8 @@ class HorarioViewModel(
                         profesor = b.profesor,
                         campus = b.campus,
                         tipo = b.tipo,
-                        periodo = b.periodo
+                        periodo = b.periodo,
+                        semanaIntercalada = semTag
                     )
                 }
             }
@@ -184,11 +212,35 @@ class HorarioViewModel(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Detección de Topes de Horario (Schedule conflicts)
-    val topesDeHorario: StateFlow<List<HorarioTope>> = miHorarioBloques.combine(flowOf(Unit)) { bloques, _ ->
+    val topesDeHorario: StateFlow<List<HorarioTope>> = combine(
+        miHorarioBloques,
+        userPreferences
+    ) { bloques, prefs ->
+        val intercaladas = prefs.clasesIntercaladas
+        val ignorados = prefs.topesIgnorados
         val grouped = bloques.groupBy { "${it.dia}_${it.bloque}" }
+
         grouped.filter { entry ->
             val distinctSiglas = entry.value.map { it.sigla.trim().uppercase() }.distinct()
-            distinctSiglas.size > 1
+            if (distinctSiglas.size <= 1) return@filter false
+
+            // Verificar si el choque está resuelto como intercalado o ignorado
+            val classesInBlock = entry.value
+            val isIntercalatedPair = classesInBlock.all { it.semanaIntercalada != null } &&
+                    classesInBlock.map { it.semanaIntercalada }.distinct().size > 1
+
+            if (isIntercalatedPair) return@filter false
+
+            // Verificar si el choque fue ignorado explícitamente
+            val isIgnored = distinctSiglas.size == 2 && run {
+                val s1 = distinctSiglas[0]
+                val s2 = distinctSiglas[1]
+                val pairKey1 = "${s1}:${s2}"
+                val pairKey2 = "${s2}:${s1}"
+                ignorados.contains(pairKey1) || ignorados.contains(pairKey2)
+            }
+
+            !isIgnored
         }.map { entry ->
             val first = entry.value.first()
             HorarioTope(
@@ -219,6 +271,34 @@ class HorarioViewModel(
         _selectedDay.value = day
     }
 
+    /**
+     * Revisa si inscribir este paralelo causará un choque de horario con ramos ya inscritos.
+     */
+    suspend fun getConflictingEnrolledClasses(
+        sigla: String,
+        paralelo: String,
+        campus: String = userPreferences.value.selectedCampus,
+        periodo: String = userPreferences.value.selectedPeriodo
+    ): List<EnrolledClassBlock> {
+        val cleanSigla = sigla.trim().uppercase()
+        val cleanPar = paralelo.trim().replace("P", "")
+        val allParalelos = repository.getParalelosBySiglaAndPeriodo(sigla, periodo).firstOrNull() ?: emptyList()
+        val matchingParalelo = allParalelos.find {
+            it.paralelo.replace("P", "").trim() == cleanPar &&
+            (campus.isBlank() || it.campus.isBlank() || it.campus.contains(campus, ignoreCase = true) || campus.contains(it.campus, ignoreCase = true))
+        } ?: allParalelos.find { it.paralelo.replace("P", "").trim() == cleanPar }
+
+        val newBlocks = if (matchingParalelo != null) {
+            repository.getBloquesByParaleloId(matchingParalelo.id).firstOrNull() ?: emptyList()
+        } else emptyList()
+
+        val currentEnrolled = miHorarioBloques.value.filter { !it.sigla.equals(cleanSigla, ignoreCase = true) }
+
+        return currentEnrolled.filter { enrolled ->
+            newBlocks.any { nb -> nb.dia == enrolled.dia && nb.bloque == enrolled.bloque }
+        }.distinctBy { "${it.sigla}_${it.paralelo}" }
+    }
+
     fun enrollParalelo(
         sigla: String,
         paralelo: String,
@@ -230,15 +310,46 @@ class HorarioViewModel(
         }
     }
 
+    fun enrollIntercalado(
+        sigla1: String,
+        par1: String,
+        sigla2: String,
+        par2: String,
+        firstSigla: String,
+        campus: String = userPreferences.value.selectedCampus,
+        periodo: String = userPreferences.value.selectedPeriodo
+    ) {
+        viewModelScope.launch {
+            userPreferencesRepository.enrollParalelo(sigla1, par1, campus, periodo)
+            userPreferencesRepository.setClasesIntercaladas(sigla1, par1, sigla2, par2, firstSigla)
+        }
+    }
+
+    fun ignoreTopeAndEnroll(
+        sigla1: String,
+        par1: String,
+        sigla2: String,
+        par2: String,
+        campus: String = userPreferences.value.selectedCampus,
+        periodo: String = userPreferences.value.selectedPeriodo
+    ) {
+        viewModelScope.launch {
+            userPreferencesRepository.enrollParalelo(sigla1, par1, campus, periodo)
+            userPreferencesRepository.ignoreTope(sigla1, sigla2)
+        }
+    }
+
     fun unenrollRamo(sigla: String) {
         viewModelScope.launch {
             userPreferencesRepository.unenrollRamo(sigla)
+            userPreferencesRepository.removeClasesIntercaladas(sigla)
         }
     }
 
     fun unenrollParalelo(sigla: String, paralelo: String) {
         viewModelScope.launch {
             userPreferencesRepository.unenrollParalelo(sigla, paralelo)
+            userPreferencesRepository.removeClasesIntercaladas(sigla)
         }
     }
 

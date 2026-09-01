@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -591,7 +592,9 @@ fun AsignaturaDetailSheet(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.height(180.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(paralelos) { p ->

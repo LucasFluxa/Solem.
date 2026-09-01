@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -215,7 +216,9 @@ fun SedeCarreraModal(
                 0 -> {
                     // Selección de Sede
                     LazyColumn(
-                        modifier = Modifier.height(280.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 340.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(campusList) { (campus, desc) ->
@@ -244,7 +247,9 @@ fun SedeCarreraModal(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     LazyColumn(
-                        modifier = Modifier.height(240.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 320.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(filteredCarreras, key = { it.id }) { c ->

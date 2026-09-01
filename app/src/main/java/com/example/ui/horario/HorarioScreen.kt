@@ -74,6 +74,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.example.data.local.entity.AsignaturaEntity
 import com.example.data.local.entity.ParaleloEntity
 import com.example.ui.components.ContextBadge
@@ -108,18 +109,16 @@ private val BLOQUES_HORARIOS = listOf(
     BloqueSlot(5, "Bloque 9-10", "9-10", "14:40 - 15:50", listOf(9, 10)),
     BloqueSlot(6, "Bloque 11-12", "11-12", "16:05 - 17:15", listOf(11, 12)),
     BloqueSlot(7, "Bloque 13-14", "13-14", "17:30 - 18:40", listOf(13, 14)),
-    BloqueSlot(8, "Bloque 15-16", "15-16", "18:55 - 20:05", listOf(15, 16)),
-    BloqueSlot(9, "Bloque 17-18", "17-18", "20:20 - 21:30", listOf(17, 18)),
-    BloqueSlot(10, "Bloque 19-20", "19-20", "21:45 - 22:55", listOf(19, 20))
+    BloqueSlot(8, "Bloque 15-16", "15-16", "18:55 - 20:05", listOf(15, 16))
 )
 
 private val DIAS_SEMANA = listOf(
-    0 to "Lunes",
-    1 to "Martes",
-    2 to "Miércoles",
-    3 to "Jueves",
-    4 to "Viernes",
-    5 to "Sábado"
+    0 to "LUNES",
+    1 to "MARTES",
+    2 to "MIÉRCOLES",
+    3 to "JUEVES",
+    4 to "VIERNES",
+    5 to "SÁBADO"
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,7 +137,9 @@ fun HorarioScreen(
     val bloquesDelDia by viewModel.bloquesForDay.collectAsState()
     val activeCarreraPlan by viewModel.activeCarreraPlanes.collectAsState()
 
+    val scope = rememberCoroutineScope()
     var showAddModal by remember { mutableStateOf(false) }
+    var pendingConflict by remember { mutableStateOf<PendingEnrollConflict?>(null) }
     val searchQuery by viewModel.searchQueryAsignatura.collectAsState()
     var selectedAsignaturaForEnroll by remember { mutableStateOf<AsignaturaEntity?>(null) }
     var selectedDetailClass by remember { mutableStateOf<EnrolledClassBlock?>(null) }
@@ -541,6 +542,43 @@ fun HorarioScreen(
         )
     }
 
+    // Diálogo de Resolución de Choque de Horario / Ramo Intercalado
+    pendingConflict?.let { conflict ->
+        ConflictResolutionDialog(
+            conflict = conflict,
+            onDismiss = { pendingConflict = null },
+            onConfirmIntercalated = { firstSigla ->
+                val other = conflict.conflictingClasses.first()
+                viewModel.enrollIntercalado(
+                    sigla1 = conflict.newSigla,
+                    par1 = conflict.newParalelo,
+                    sigla2 = other.sigla,
+                    par2 = other.paralelo,
+                    firstSigla = firstSigla,
+                    campus = conflict.newCampus,
+                    periodo = conflict.newPeriodo
+                )
+                pendingConflict = null
+                showAddModal = false
+                selectedAsignaturaForEnroll = null
+            },
+            onConfirmIgnoredTope = {
+                val other = conflict.conflictingClasses.first()
+                viewModel.ignoreTopeAndEnroll(
+                    sigla1 = conflict.newSigla,
+                    par1 = conflict.newParalelo,
+                    sigla2 = other.sigla,
+                    par2 = other.paralelo,
+                    campus = conflict.newCampus,
+                    periodo = conflict.newPeriodo
+                )
+                pendingConflict = null
+                showAddModal = false
+                selectedAsignaturaForEnroll = null
+            }
+        )
+    }
+
     // Modal para Añadir Ramo a Mi Horario
     if (showAddModal) {
         ModalBottomSheet(
@@ -581,7 +619,7 @@ fun HorarioScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(380.dp)
+                            .heightIn(max = 380.dp)
                     ) {
                         items(availableAsignaturas, key = { it.sigla }) { asig ->
                             val isInscribed = userPrefs.misRamosInscritos.contains(asig.sigla)
@@ -646,56 +684,68 @@ fun HorarioScreen(
                         }
                     }
                 } else {
-                    // Seleccionar Paralelo para la asignatura seleccionada
                     val asig = selectedAsignaturaForEnroll!!
-                    val paralelosList by viewModel.getParalelosForSigla(asig.sigla).collectAsState(initial = emptyList())
-                    val campusFilteredParalelos = remember(paralelosList, userPrefs.selectedCampus) {
-                        paralelosList.filter { it.campus.contains(userPrefs.selectedCampus.take(8), ignoreCase = true) }
-                            .ifEmpty { paralelosList }
-                    }
+                    val campusFilteredParalelos by viewModel.getParalelosForSigla(asig.sigla).collectAsState(initial = emptyList())
+                    val allParalelos by viewModel.getAllParalelosForSigla(asig.sigla).collectAsState(initial = emptyList())
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 12.dp)
-                        ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Seleccionar Paralelo",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = SolemTextPrimary,
+                                text = asig.sigla,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SolemAccentCyan,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${asig.sigla} - ${asig.nombre}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolemAccentCyan,
-                                maxLines = 2,
+                                text = asig.nombre,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = SolemTextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+                            Text(
+                                text = "${asig.departamento} • ${asig.creditos} créditos SCT",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolemTextMuted
+                            )
                         }
-                        OutlinedButton(
+
+                        IconButton(
                             onClick = { selectedAsignaturaForEnroll = null },
-                            shape = RoundedCornerShape(10.dp)
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(SolemSurfaceVariant)
                         ) {
-                            Text("Volver", fontSize = 12.sp, maxLines = 1, softWrap = false)
+                            Icon(Icons.Default.Check, contentDescription = "Volver", tint = SolemTextSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    if (campusFilteredParalelos.isEmpty()) {
-                        // Si no hay paralelos descargados en BD, permitir elegir Paralelo 1 por defecto
+                    Text(
+                        text = "PARALELOS DISPONIBLES (${userPrefs.selectedCampus})",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SolemPrimaryBlueLight,
+                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (campusFilteredParalelos.isEmpty() && allParalelos.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(SolemSurfaceVariant)
-                                .padding(16.dp)
+                                .background(SolemSurfaceVariant.copy(alpha = 0.5f))
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Column {
                                 Text(
@@ -712,9 +762,22 @@ fun HorarioScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Button(
                                     onClick = {
-                                        viewModel.enrollParalelo(asig.sigla, "1")
-                                        showAddModal = false
-                                        selectedAsignaturaForEnroll = null
+                                        scope.launch {
+                                            val conflicts = viewModel.getConflictingEnrolledClasses(asig.sigla, "1", userPrefs.selectedCampus, userPrefs.selectedPeriodo)
+                                            if (conflicts.isNotEmpty()) {
+                                                pendingConflict = PendingEnrollConflict(
+                                                    newSigla = asig.sigla,
+                                                    newParalelo = "1",
+                                                    newCampus = userPrefs.selectedCampus,
+                                                    newPeriodo = userPrefs.selectedPeriodo,
+                                                    conflictingClasses = conflicts
+                                                )
+                                            } else {
+                                                viewModel.enrollParalelo(asig.sigla, "1")
+                                                showAddModal = false
+                                                selectedAsignaturaForEnroll = null
+                                            }
+                                        }
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = SolemPrimaryBlue,
@@ -731,7 +794,7 @@ fun HorarioScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(340.dp)
+                                .heightIn(max = 360.dp)
                         ) {
                             items(campusFilteredParalelos, key = { it.id }) { par ->
                                 val parBloques by viewModel.getBloquesForParalelo(par.id).collectAsState(initial = emptyList())
@@ -797,9 +860,22 @@ fun HorarioScreen(
 
                                             Button(
                                                 onClick = {
-                                                    viewModel.enrollParalelo(asig.sigla, par.paralelo, par.campus, par.periodo)
-                                                    showAddModal = false
-                                                    selectedAsignaturaForEnroll = null
+                                                    scope.launch {
+                                                        val conflicts = viewModel.getConflictingEnrolledClasses(asig.sigla, par.paralelo, par.campus, par.periodo)
+                                                        if (conflicts.isNotEmpty()) {
+                                                            pendingConflict = PendingEnrollConflict(
+                                                                newSigla = asig.sigla,
+                                                                newParalelo = par.paralelo,
+                                                                newCampus = par.campus,
+                                                                newPeriodo = par.periodo,
+                                                                conflictingClasses = conflicts
+                                                            )
+                                                        } else {
+                                                            viewModel.enrollParalelo(asig.sigla, par.paralelo, par.campus, par.periodo)
+                                                            showAddModal = false
+                                                            selectedAsignaturaForEnroll = null
+                                                        }
+                                                    }
                                                 },
                                                 colors = ButtonDefaults.buttonColors(
                                                     containerColor = SolemPrimaryBlue,
@@ -940,14 +1016,16 @@ fun MiHorarioBloqueCard(
                                 .padding(10.dp)
                         ) {
                             Column {
+                                // Fila 1: Badges de Sigla, Paralelo, Tipo, Intercalado y Botón Eliminar
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(
-                                        modifier = Modifier.weight(1f),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier = Modifier.weight(1f, fill = false),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         // Badge de Sigla
                                         Box(
@@ -963,8 +1041,6 @@ fun MiHorarioBloqueCard(
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
-
-                                        Spacer(modifier = Modifier.width(6.dp))
 
                                         // Badge de Paralelo
                                         Box(
@@ -982,8 +1058,6 @@ fun MiHorarioBloqueCard(
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(6.dp))
-
                                         // Badge de Tipo
                                         Box(
                                             modifier = Modifier
@@ -1000,16 +1074,24 @@ fun MiHorarioBloqueCard(
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Text(
-                                            text = c.asignaturaNombre,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = SolemTextPrimary,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        // Badge de Semana Intercalada (si aplica)
+                                        if (c.semanaIntercalada != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color(0xFF7C4DFF).copy(alpha = 0.25f))
+                                                    .border(0.5.dp, Color(0xFFB388FF), RoundedCornerShape(6.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Semana ${c.semanaIntercalada}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = Color(0xFFB388FF),
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
                                     }
 
                                     IconButton(
@@ -1024,6 +1106,18 @@ fun MiHorarioBloqueCard(
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Fila 2: Nombre Completo de la Asignatura
+                                Text(
+                                    text = c.asignaturaNombre,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = SolemTextPrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
 
                                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -1237,7 +1331,8 @@ fun HorarioSemanalMatrixGrid(
                         val matchingClasses = miHorarioBloques
                             .filter { it.dia == diaNum && it.bloque in slot.bloques }
                             .distinctBy { "${it.sigla}_${it.paralelo}_${it.tipo}" }
-                        val isTope = matchingClasses.size > 1
+                        val isIntercalado = matchingClasses.size > 1 && matchingClasses.all { it.semanaIntercalada != null }
+                        val isTope = matchingClasses.size > 1 && !isIntercalado
 
                         Box(
                             modifier = Modifier
@@ -1254,6 +1349,55 @@ fun HorarioSemanalMatrixGrid(
                                         .background(SolemBackground.copy(alpha = 0.35f))
                                         .border(0.5.dp, SolemBorder.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
                                 )
+                            } else if (isIntercalado) {
+                                // Celda con Clases Intercaladas (Semanas A/B)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF7C4DFF).copy(alpha = 0.22f))
+                                        .border(1.5.dp, Color(0xFFB388FF).copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                                        .clickable { onSelectClass(matchingClasses.first()) }
+                                        .padding(4.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "INTERCALADO",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFFB388FF),
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 7.5.sp
+                                            )
+                                            Text(
+                                                text = "A/B",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = SolemAccentCyan,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 8.sp
+                                            )
+                                        }
+                                        matchingClasses.take(2).forEach { cl ->
+                                            val semLabel = cl.semanaIntercalada?.let { "[$it]" } ?: ""
+                                            Text(
+                                                text = "$semLabel ${cl.sigla}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = SolemTextPrimary,
+                                                fontSize = 8.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
                             } else if (isTope) {
                                 // Celda con Tope de Horario
                                 Box(

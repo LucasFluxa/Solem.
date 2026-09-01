@@ -20,7 +20,7 @@ import org.json.JSONObject
 import java.net.URL
 import com.example.ui.theme.*
 
-private fun isNewerVersion(remote: String, current: String): Boolean {
+fun isNewerVersion(remote: String, current: String): Boolean {
     return try {
         val remoteParts = remote.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
         val currentParts = current.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }

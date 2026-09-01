@@ -93,6 +93,9 @@ import com.example.ui.theme.SolemTextMuted
 import com.example.ui.theme.SolemTextPrimary
 import com.example.ui.theme.SolemTextSecondary
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class BloqueSlot(
     val id: Int,
     val label: String,
@@ -498,14 +501,20 @@ fun HorarioScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
+                            val dailyBloquesMap = remember(bloquesDelDia, activeBloques) {
+                                activeBloques.associateWith { slot ->
+                                    bloquesDelDia
+                                        .filter { it.bloque in slot.bloques }
+                                        .distinctBy { "${it.sigla}_${it.paralelo}_${it.tipo}" }
+                                }
+                            }
+
                             LazyColumn(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(activeBloques) { slot ->
-                                    val matchesInBloque = bloquesDelDia
-                                        .filter { it.bloque in slot.bloques }
-                                        .distinctBy { "${it.sigla}_${it.paralelo}_${it.tipo}" }
+                                items(activeBloques, key = { it.id }, contentType = { "bloque_slot" }) { slot ->
+                                    val matchesInBloque = dailyBloquesMap[slot] ?: emptyList()
 
                                     MiHorarioBloqueCard(
                                         bloqueLabel = slot.label,
@@ -1232,6 +1241,21 @@ fun HorarioSemanalMatrixGrid(
         }
     }
 
+    val matrixGridMap = remember(miHorarioBloques, activeDias, activeBloques) {
+        val map = HashMap<Pair<Int, Int>, List<EnrolledClassBlock>>()
+        activeBloques.forEach { slot ->
+            activeDias.forEach { (diaNum, _) ->
+                val matching = miHorarioBloques
+                    .filter { it.dia == diaNum && it.bloque in slot.bloques }
+                    .distinctBy { "${it.sigla}_${it.paralelo}_${it.tipo}" }
+                if (matching.isNotEmpty()) {
+                    map[diaNum to slot.id] = matching
+                }
+            }
+        }
+        map
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -1328,9 +1352,7 @@ fun HorarioSemanalMatrixGrid(
 
                     // Columnas de Días activos
                     activeDias.forEach { (diaNum, _) ->
-                        val matchingClasses = miHorarioBloques
-                            .filter { it.dia == diaNum && it.bloque in slot.bloques }
-                            .distinctBy { "${it.sigla}_${it.paralelo}_${it.tipo}" }
+                        val matchingClasses = matrixGridMap[diaNum to slot.id] ?: emptyList()
                         val isIntercalado = matchingClasses.size > 1 && matchingClasses.all { it.semanaIntercalada != null }
                         val isTope = matchingClasses.size > 1 && !isIntercalado
 

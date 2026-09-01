@@ -1,9 +1,11 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "changelog": [
-    "Lanzamiento oficial de Solem v1.0.0 para estudiantes USM.",
-    "Horarios personalizados y catálogo de asignaturas offline.",
-    "Malla curricular interactiva con prerequisitos."
+    "Mejora significativa de rendimiento y fluidez a 60/120 FPS en toda la app.",
+    "Soporte para clases y laboratorios intercalados (Semanas A/B).",
+    "Resolución interactiva de choques de horario.",
+    "Optimización de scroll en Malla Curricular y matriz semanal.",
+    "Corrección de responsividad y fuentes en pantallas de diversos tamaños."
   ],
   "downloadUrl": "https://github.com/LucasFluxa/Solem./releases"
 }

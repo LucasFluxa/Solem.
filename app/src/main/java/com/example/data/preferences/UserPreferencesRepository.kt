@@ -17,10 +17,12 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import androidx.compose.runtime.Immutable
 import java.io.IOException
 
 val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
 
+@Immutable
 data class UserPreferences(
     val selectedCampus: String = "Casa Central Valparaíso",
     val selectedCarreraCodigo: String = "",

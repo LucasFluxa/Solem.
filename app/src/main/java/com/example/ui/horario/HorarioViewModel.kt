@@ -21,8 +21,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.Immutable
 import java.util.Calendar
 
+@Immutable
 data class EnrolledClassBlock(
     val sigla: String,
     val asignaturaNombre: String,
@@ -37,6 +39,7 @@ data class EnrolledClassBlock(
     val semanaIntercalada: String? = null // "A" (Semana 1 / Impar) o "B" (Semana 2 / Par)
 )
 
+@Immutable
 data class HorarioTope(
     val dia: Int,
     val bloque: Int,

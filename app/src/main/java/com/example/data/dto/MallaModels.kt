@@ -1,5 +1,6 @@
 package com.example.data.dto
 
+import androidx.compose.runtime.Immutable
 import com.squareup.moshi.JsonClass
 
 enum class RamoEstado {
@@ -10,6 +11,7 @@ enum class RamoEstado {
     PENDIENTE   // Sin prerrequisitos pendientes, no cursado
 }
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class MallaRamoModel(
     val sigla: String,
@@ -21,6 +23,7 @@ data class MallaRamoModel(
     val semestre: Int = 1
 )
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class MallaSemestreModel(
     val numeroSemestre: Int,
@@ -29,6 +32,7 @@ data class MallaSemestreModel(
     val ramos: List<MallaRamoModel>
 )
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class MallaCurricularModel(
     val carreraCodigo: String,

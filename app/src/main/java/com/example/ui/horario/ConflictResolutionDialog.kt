@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.ui.theme.*
 
+@Immutable
 data class PendingEnrollConflict(
     val newSigla: String,
     val newParalelo: String,

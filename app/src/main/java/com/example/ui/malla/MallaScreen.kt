@@ -553,6 +553,8 @@ fun MallaMatrixView(
                             val isHabilitadoBySelected = habilitaOfSelected.contains(ramo.sigla)
                             val isCorreqOfSelected = correqsOfSelected.contains(ramo.sigla)
 
+                            val needsPositioning = selectedSigla != null
+
                             MallaRamoCard(
                                 ramo = ramo,
                                 isAprobado = isAprobado,
@@ -562,19 +564,21 @@ fun MallaMatrixView(
                                 isCorreqOfSelected = isCorreqOfSelected,
                                 onClick = { onRamoClick(ramo) },
                                 modifier = Modifier.onGloballyPositioned { coords ->
-                                    containerCoordinates?.let { parent ->
-                                        if (coords.isAttached && parent.isAttached) {
-                                            val left = parent.localPositionOf(coords, Offset(0f, coords.size.height / 2f))
-                                            val right = parent.localPositionOf(coords, Offset(coords.size.width.toFloat(), coords.size.height / 2f))
-                                            val center = parent.localPositionOf(coords, Offset(coords.size.width / 2f, coords.size.height / 2f))
-                                            if (cardLeftAnchors[ramo.sigla]?.let { (it - left).getDistanceSquared() > 1f } != false) {
-                                                cardLeftAnchors[ramo.sigla] = left
-                                            }
-                                            if (cardRightAnchors[ramo.sigla]?.let { (it - right).getDistanceSquared() > 1f } != false) {
-                                                cardRightAnchors[ramo.sigla] = right
-                                            }
-                                            if (cardCenters[ramo.sigla]?.let { (it - center).getDistanceSquared() > 1f } != false) {
-                                                cardCenters[ramo.sigla] = center
+                                    if (needsPositioning) {
+                                        containerCoordinates?.let { parent ->
+                                            if (coords.isAttached && parent.isAttached) {
+                                                val left = parent.localPositionOf(coords, Offset(0f, coords.size.height / 2f))
+                                                val right = parent.localPositionOf(coords, Offset(coords.size.width.toFloat(), coords.size.height / 2f))
+                                                val center = parent.localPositionOf(coords, Offset(coords.size.width / 2f, coords.size.height / 2f))
+                                                if (cardLeftAnchors[ramo.sigla]?.let { (it - left).getDistanceSquared() > 4f } != false) {
+                                                    cardLeftAnchors[ramo.sigla] = left
+                                                }
+                                                if (cardRightAnchors[ramo.sigla]?.let { (it - right).getDistanceSquared() > 4f } != false) {
+                                                    cardRightAnchors[ramo.sigla] = right
+                                                }
+                                                if (cardCenters[ramo.sigla]?.let { (it - center).getDistanceSquared() > 4f } != false) {
+                                                    cardCenters[ramo.sigla] = center
+                                                }
                                             }
                                         }
                                     }
@@ -716,17 +720,34 @@ fun MallaRamoCard(
     val cardHeight = 106.dp
 
     // Fondo y Colores de Texto según esté Aprobado o Pendiente
-    val bgColor = if (isAprobado) SolemMallaAprobadoBg else SolemSurfaceCard
-    val textColor = if (isAprobado) SolemMallaAprobadoText else SolemTextPrimary
-    val subTextColor = if (isAprobado) SolemMallaAprobadoText.copy(alpha = 0.85f) else SolemTextMuted
+    val (bgColor, textColor, subTextColor) = remember(isAprobado) {
+        if (isAprobado) {
+            Triple(SolemMallaAprobadoBg, SolemMallaAprobadoText, SolemMallaAprobadoText.copy(alpha = 0.85f))
+        } else {
+            Triple(SolemSurfaceCard, SolemTextPrimary, SolemTextMuted)
+        }
+    }
 
     // Determinar Borde según Relaciones de Selección
-    val (borderWidth, borderColor) = when {
-        isSelected -> 3.dp to Color.White
-        isPrereqOfSelected -> 2.5.dp to ColorPrerrequisito
-        isHabilitadoBySelected -> 2.5.dp to ColorHabilita
-        isCorreqOfSelected -> 2.5.dp to ColorCorrequisito
-        else -> 1.dp to SolemBorder.copy(alpha = 0.6f)
+    val (borderWidth, borderColor) = remember(isSelected, isPrereqOfSelected, isHabilitadoBySelected, isCorreqOfSelected) {
+        when {
+            isSelected -> 3.dp to Color.White
+            isPrereqOfSelected -> 2.5.dp to ColorPrerrequisito
+            isHabilitadoBySelected -> 2.5.dp to ColorHabilita
+            isCorreqOfSelected -> 2.5.dp to ColorCorrequisito
+            else -> 1.dp to SolemBorder.copy(alpha = 0.6f)
+        }
+    }
+
+    val dotColor = remember(isPrereqOfSelected, isHabilitadoBySelected, isCorreqOfSelected, isAprobado, ramo.prerequisitos.isEmpty()) {
+        when {
+            isPrereqOfSelected -> ColorPrerrequisito
+            isHabilitadoBySelected -> ColorHabilita
+            isCorreqOfSelected -> ColorCorrequisito
+            isAprobado -> SolemMallaAprobadoText
+            ramo.prerequisitos.isEmpty() -> ColorSinRequisito
+            else -> SolemAccentCyan
+        }
     }
 
     Box(
@@ -750,16 +771,6 @@ fun MallaRamoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Dot indicador
-                val dotColor = when {
-                    isPrereqOfSelected -> ColorPrerrequisito
-                    isHabilitadoBySelected -> ColorHabilita
-                    isCorreqOfSelected -> ColorCorrequisito
-                    isAprobado -> SolemMallaAprobadoText
-                    ramo.prerequisitos.isEmpty() -> ColorSinRequisito
-                    else -> SolemAccentCyan
-                }
-
                 Box(
                     modifier = Modifier
                         .size(6.dp)

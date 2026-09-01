@@ -231,7 +231,7 @@ fun RamosScreen(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(asignaturas, key = { it.sigla }) { ramo ->
+                    items(asignaturas, key = { it.sigla }, contentType = { "asignatura_card" }) { ramo ->
                         val isInHorario = userPrefs.misRamosInscritos.contains(ramo.sigla)
                         AsignaturaCard(
                             asignatura = ramo,

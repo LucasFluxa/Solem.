@@ -1,4 +1,5 @@
 package com.example.ui.configuracion
+import androidx.compose.material.icons.filled.Code
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -894,11 +895,30 @@ fun ConfiguracionScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Text(
-                            text = "Tu compañero para la USM. Organiza tu horario, explora paralelos y gestiona tu malla curricular de manera moderna y rápida.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SolemTextMuted
-                        )
+                        
+                        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { uriHandler.openUri("https://github.com/LucasFluxa/Solem") }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = "GitHub",
+                                tint = SolemPrimaryBlueLight,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Ver código fuente en GitHub",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolemPrimaryBlueLight,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                         HorizontalDivider(
                             color = SolemBorder,
                             modifier = Modifier.padding(vertical = 2.dp)

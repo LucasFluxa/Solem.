@@ -2,6 +2,8 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.example.ui.updater.UpdateChecker
+import com.example.BuildConfig
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -139,6 +141,8 @@ fun SolemApp(
                 .background(SolemBackground)
                 .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
+            UpdateChecker(currentVersion = BuildConfig.VERSION_NAME)
+
             when (currentTab) {
                 SolemTab.HORARIO -> HorarioScreen(
                     viewModel = horarioViewModel,

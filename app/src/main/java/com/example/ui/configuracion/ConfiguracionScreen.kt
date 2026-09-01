@@ -901,7 +901,7 @@ fun ConfiguracionScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
-                                .clickable { uriHandler.openUri("https://github.com/LucasFluxa/Solem") }
+                                .clickable { uriHandler.openUri("https://github.com/LucasFluxa/Solem.") }
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {

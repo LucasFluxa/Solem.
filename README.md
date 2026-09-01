@@ -11,6 +11,7 @@
 </p>
 
 <p>
+  <img src="https://img.shields.io/badge/Status-Beta-orange?style=flat-square" alt="Status Beta" />
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-UI-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />
@@ -18,6 +19,12 @@
 </p>
 
 </div>
+
+---
+
+## Estado del Proyecto
+
+Solem se encuentra actualmente en **fase beta** y en desarrollo activo. Algunas funcionalidades pueden presentar inconsistencias o errores menores mientras se continúa optimizando la plataforma y la base de datos académica.
 
 ---
 
@@ -48,6 +55,12 @@
 | :--- | :--- | :--- |
 | Creador y Desarrollador Principal | Lucas Fluxà | [@LucasFluxa](https://github.com/LucasFluxa) |
 | AI Pair Programmer y Arquitectura | Antigravity (Google DeepMind) | [Google DeepMind](https://deepmind.google) |
+
+---
+
+## Descargo de Responsabilidad
+
+Solem es un proyecto independiente y de código abierto desarrollado por y para estudiantes. Esta aplicación **no es oficial** y **no tiene afiliación, patrocinio ni relación formal** con la Universidad Técnica Federico Santa María (USM). Todas las marcas registradas, nombres de asignaturas, códigos de ramos y datos institucionales pertenecen a sus respectivos titulares y se emplean exclusivamente con fines organizativos y de consulta estudiantil.
 
 ---
 

@@ -46,7 +46,7 @@ fun UpdateChecker(currentVersion: String) {
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                val url = "https://raw.githubusercontent.com/LucasFluxa/Solem./main/version.json"
+                val url = "https://raw.githubusercontent.com/LucasFluxa/Solem./main/version.json?t=" + System.currentTimeMillis()
                 val jsonString = URL(url).readText()
                 val json = JSONObject(jsonString)
                 val remoteVersion = json.optString("version", "")

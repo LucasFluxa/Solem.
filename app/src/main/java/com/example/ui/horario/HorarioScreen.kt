@@ -1568,9 +1568,9 @@ fun ClassDetailBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botón 1: Quitar solo este paralelo / taller
+            // Botón único para eliminar la asignatura completa
             Button(
-                onClick = { onUnenrollParalelo(clase.sigla, clase.paralelo) },
+                onClick = { onUnenrollRamo(clase.sigla) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = SolemAccentRose.copy(alpha = 0.2f),
                     contentColor = SolemAccentRose
@@ -1580,18 +1580,7 @@ fun ClassDetailBottomSheet(
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Quitar este Paralelo / $tipoTag (P${clase.paralelo})", fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Botón 2: Quitar toda la asignatura
-            OutlinedButton(
-                onClick = { onUnenrollRamo(clase.sigla) },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Quitar Asignatura Completa (${clase.sigla})", fontSize = 12.sp, color = SolemTextMuted)
+                Text("Eliminar del Horario", fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

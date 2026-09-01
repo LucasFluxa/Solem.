@@ -1,4 +1,6 @@
 package com.example.ui.configuracion
+
+import com.example.BuildConfig
 import androidx.compose.material.icons.filled.Code
 
 import android.Manifest
@@ -933,7 +935,7 @@ fun ConfiguracionScreen(
                                 color = SolemTextMuted
                             )
                             Text(
-                                text = "1.0.0",
+                                text = BuildConfig.VERSION_NAME,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = SolemAccentCyan,
                                 fontWeight = FontWeight.SemiBold

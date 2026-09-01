@@ -20,7 +20,6 @@ app/build/
 *.py
 .agents/
 .antigravity/
-logo/
 correcta-extraccion/
 horario-usm-main/
 test.kts

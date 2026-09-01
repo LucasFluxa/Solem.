@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-UI-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />
   <img src="https://img.shields.io/badge/Architecture-Clean%20%2F%20MVVM-555555?style=flat-square" alt="Architecture" />
+  <img src="https://img.shields.io/badge/License-GPL%20v3-blue?style=flat-square" alt="License: GPL v3" />
 </p>
 
 </div>
@@ -61,6 +62,12 @@ Solem se encuentra actualmente en **fase beta** y en desarrollo activo. Algunas 
 ## Reconocimientos y Fuentes
 
 * Datos académicos y estructura base de horarios y asignaturas basados en el proyecto de código abierto [horario-usm](https://github.com/AlvinIsCrack/horario-usm).
+
+---
+
+## Licencia
+
+Este proyecto está distribuido bajo los términos de la licencia **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**. Consulta el archivo `LICENSE` para más detalles.
 
 ---
 

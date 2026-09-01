@@ -30,7 +30,7 @@ fun UpdateChecker(currentVersion: String) {
         withContext(Dispatchers.IO) {
             try {
                 // Endpoint fijo en github donde pondrás el version.json
-                val url = "https://raw.githubusercontent.com/LucasFluxa/Solem/main/version.json"
+                val url = "https://raw.githubusercontent.com/LucasFluxa/Solem./main/version.json"
                 val jsonString = URL(url).readText()
                 val json = JSONObject(jsonString)
                 val remoteVersion = json.getString("version")
@@ -49,7 +49,7 @@ fun UpdateChecker(currentVersion: String) {
     if (showUpdateDialog && newVersionData != null) {
         val version = newVersionData!!.getString("version")
         val changelogArray = newVersionData!!.optJSONArray("changelog")
-        val downloadUrl = newVersionData!!.optString("downloadUrl", "https://github.com/LucasFluxa/Solem/releases/latest")
+        val downloadUrl = newVersionData!!.optString("downloadUrl", "https://github.com/LucasFluxa/Solem./releases/latest")
         
         val changelog = buildString {
             if (changelogArray != null) {

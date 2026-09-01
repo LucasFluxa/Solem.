@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "banner-design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/banner-design/SKILL.md",
+      "computedHash": "82c86217829268afd1f86e89390270e35cb3a1761854a0bbe6180929614ae022"
+    },
+    "brand": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/brand/SKILL.md",
+      "computedHash": "2077eb4768370a23aee9696cbb5995a41df7b5415a31f7756e9ef60e39b3523f"
+    },
+    "design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/design/SKILL.md",
+      "computedHash": "d558512a30afe0ec4c636c3c43d53bbddad83b23ddd8031f4abe58bd2a62cb3e"
+    },
+    "design-system": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/design-system/SKILL.md",
+      "computedHash": "a05715299135276628f53519484e1267ec8ad111e6355a09c2da1cf66aee2cc3"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "4e5b5d654729e1576b1a9ba51781b70aada94b0b270e53aec94b4881b49036d0"
+    },
+    "slides": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/slides/SKILL.md",
+      "computedHash": "c72a8bcd2ee98a7caab8f00a816c7e7ccfa46bba6682539db2186e71220155f1"
+    },
+    "ui-styling": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-styling/SKILL.md",
+      "computedHash": "360a6007fae358c852fe0ba5efc0f69deee4768a00b9bdc8cd393a3f8491626a"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "523b8063c07eedd2b8a1ca94d7a0be9ad340026bd9f21a1eda0b6be2a855298f"
+    }
+  }
+}

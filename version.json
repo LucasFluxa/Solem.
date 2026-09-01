@@ -1,11 +1,10 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "changelog": [
-    "Mejora significativa de rendimiento y fluidez a 60/120 FPS en toda la app.",
-    "Soporte para clases y laboratorios intercalados (Semanas A/B).",
-    "Resolución interactiva de choques de horario.",
-    "Optimización de scroll en Malla Curricular y matriz semanal.",
-    "Corrección de responsividad y fuentes en pantallas de diversos tamaños."
+    "Inclusión de IWG103 y todas las asignaturas/talleres transversales USM.",
+    "Corrección de bug en scroll al buscar asignaturas, profesores o mallas.",
+    "Mejora masiva de rendimiento y fluidez en todas las pantallas.",
+    "Soporte para clases y laboratorios intercalados (Semanas A/B)."
   ],
-  "downloadUrl": "https://github.com/LucasFluxa/Solem./releases"
+  "downloadUrl": "https://github.com/LucasFluxa/Solem./releases/tag/v1.0.2"
 }

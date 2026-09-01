@@ -60,7 +60,7 @@ Solem se encuentra actualmente en **fase beta** y en desarrollo activo. Algunas 
 
 ## Reconocimientos y Fuentes
 
-* Datos académicos y estructura base de horarios y asignaturas basados en el proyecto comunitario de código abierto [horario-usm](https://github.com/braianvallejos/horario-usm).
+* Datos académicos y estructura base de horarios y asignaturas basados en el proyecto comunitario de código abierto [horario-usm](https://github.com/AlvinIsCrack/horario-usm).
 
 ---
 

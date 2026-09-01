@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -358,9 +359,13 @@ fun MallaScreen(
                     placeholderText = "Buscar carrera o código..."
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                val carreraListState = androidx.compose.foundation.lazy.rememberLazyListState()
+                LaunchedEffect(carreraQuery) {
+                    carreraListState.scrollToItem(0)
+                }
 
                 LazyColumn(
+                    state = carreraListState,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 380.dp),

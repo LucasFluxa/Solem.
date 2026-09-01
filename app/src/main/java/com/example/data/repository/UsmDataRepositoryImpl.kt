@@ -483,26 +483,24 @@ class UsmDataRepositoryImpl(
                                 sigla.replace(Regex("[^0-9]+\$"), "")
                             } else sigla
 
-                            // Permitir la asignatura si ella o su sigla base pertenecen a las carreras válidas
-                            val isValida = sigla in validSiglas || baseSigla in validSiglas || validSiglas.isEmpty()
-                            if (!isValida) return@forEach
-
                             // Registrar la asignatura/taller/ayudantía en asignaturasMap para búsqueda y visualización
                             if (!asignaturasMap.containsKey(sigla)) {
                                 val baseAsig = asignaturasMap[baseSigla] 
                                     ?: validMallaAsignaturasMap[baseSigla] 
                                     ?: DEFAULT_ASIGNATURAS_BASE.find { it.sigla == baseSigla }
                                 
-                                val baseName = baseAsig?.nombre ?: programasNombresMap[baseSigla] ?: baseSigla
+                                val primerParalelo = paralelos.values.firstOrNull()
+                                val primerNombre = primerParalelo?.nombre?.takeIf { it.isNotBlank() }
+                                val baseName = primerNombre ?: baseAsig?.nombre ?: programasNombresMap[baseSigla] ?: baseSigla
                                 val suffixDesc = when {
-                                    sigla.endsWith("T") -> " (Taller)"
-                                    sigla.endsWith("Y") -> " (Ayudantía)"
-                                    sigla.endsWith("L") -> " (Laboratorio)"
-                                    sigla.endsWith("C") -> " (Cátedra)"
+                                    sigla.endsWith("T") && !baseName.contains("Taller", ignoreCase = true) -> " (Taller)"
+                                    sigla.endsWith("Y") && !baseName.contains("Ayudantía", ignoreCase = true) -> " (Ayudantía)"
+                                    sigla.endsWith("L") && !baseName.contains("Lab", ignoreCase = true) -> " (Laboratorio)"
+                                    sigla.endsWith("C") && !baseName.contains("Cátedra", ignoreCase = true) -> " (Cátedra)"
                                     else -> ""
                                 }
-                                val fullName = (programasNombresMap[sigla] ?: "$baseName$suffixDesc").toTitleCase()
-                                val depto = paralelos.values.firstOrNull()?.departamento 
+                                val fullName = (primerNombre ?: programasNombresMap[sigla] ?: "$baseName$suffixDesc").toTitleCase()
+                                val depto = primerParalelo?.departamento 
                                     ?: baseAsig?.departamento 
                                     ?: inferDepartamentoFromSigla(sigla)
 

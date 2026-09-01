@@ -31,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -75,6 +76,11 @@ fun ProfesoresScreen(
 
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    LaunchedEffect(searchQuery, isFiltered) {
+        listState.scrollToItem(0)
+    }
 
     Scaffold(
         containerColor = SolemBackground,
@@ -157,6 +163,7 @@ fun ProfesoresScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {

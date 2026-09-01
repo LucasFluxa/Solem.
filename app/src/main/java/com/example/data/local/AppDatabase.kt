@@ -26,7 +26,7 @@ import com.example.data.local.entity.ReviewEntity
         ReviewEntity::class,
         CarreraPlanEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(RoomConverters::class)
